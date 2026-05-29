@@ -1,0 +1,35 @@
+name: Update concerts.json
+
+on:
+  schedule:
+    - cron: '0 21 * * *'  # 매일 오전 6시 KST (UTC 21시)
+  workflow_dispatch:        # 수동 실행 버튼
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4 lxml python-dateutil
+
+      - name: Run kopis_concert.py
+        env:
+          KOPIS_SERVICE_KEY: ${{ secrets.KOPIS_SERVICE_KEY }}
+        run: python kopis_concert.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add concerts.json
+          git diff --staged --quiet || git commit -m "Auto update concerts.json"
+          git push
